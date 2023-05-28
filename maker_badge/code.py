@@ -1,112 +1,55 @@
-import time
-import terminalio
-import board
-import neopixel
-import touchio
-import displayio
-import adafruit_ssd1680
-from adafruit_display_text import label
+import asyncio
+
+import button
+import display
+import led
 
 
-# Function for append text to the display data
-def _addText(text, scale, color, x_cord, y_cord):
-    group = displayio.Group(scale=scale, x=x_cord, y=y_cord)
-    text_label = label.Label(terminalio.FONT, text=text, color=color)
-    group.append(text_label)
-    display_data.append(group)
+async def main():
+    # Init peripherals
+    buttons = button.init()
+    screen = display.init()
+    leds = led.init()
+
+    screen_data = display.display_data()
+    display.addText(screen_data, "Test", 3, display.COLORS["black"], 70, 20)
+    screen.show(screen_data)
+    screen.refresh()
+
+    led_task = asyncio.create_task(blink(leds))
+    btn_task = asyncio.create_task(set_color(buttons, leds))
+
+    print("Running...")
+    await asyncio.gather(led_task, btn_task)
 
 
-# Define board pinout
-board_spi = board.SPI()  # Uses SCK and MOSI
-board_epd_cs = board.D41
-board_epd_dc = board.D40
-board_epd_reset = board.D39
-board_epd_busy = board.D42
+async def blink(leds):
+    while True:
+        print(".", end="")
+        leds[-1] = led.COLORS["off"]
+        leds.show()
+        await asyncio.sleep(1)
+        leds[-1] = led.COLORS["red"]
+        leds.show()
+        await asyncio.sleep(1)
 
-# Define touch buttons
-touch_threshold = 20000
-touch_1 = touchio.TouchIn(board.D5)
-touch_1.threshold = touch_threshold
-touch_2 = touchio.TouchIn(board.D4)
-touch_2.threshold = touch_threshold
-touch_3 = touchio.TouchIn(board.D3)
-touch_3.threshold = touch_threshold
-touch_4 = touchio.TouchIn(board.D2)
-touch_4.threshold = touch_threshold
-touch_5 = touchio.TouchIn(board.D1)
-touch_5.threshold = touch_threshold
 
-# Define LED
-led_pin = board.D18
-led_matrix = neopixel.NeoPixel(led_pin, 4, brightness=0.1, auto_write=False)
+async def set_color(btns, leds):
+    colors = [
+        led.COLORS["red"],
+        led.COLORS["green"],
+        led.COLORS["blue"],
+        led.COLORS["white"],
+        led.COLORS["off"],
+    ]
 
-# Define LED colors value
-led_off = (0, 0, 0)
-led_red = (255, 0, 0)
-led_green = (0, 255, 0)
-led_blue = (0, 0, 255)
+    while True:
+        for i in range(5):
+            if btns[i].value:
+                leds[0] = colors[i]
+                leds.show()
 
-# Define ePaper display colors value
-display_black = 0x000000
-display_white = 0xFFFFFF
+        await asyncio.sleep(0.05)
 
-# Define ePaper display resolution
-display_width = 250
-display_height = 122
 
-# Prepare ePaper display
-displayio.release_displays()
-display_bus = displayio.FourWire(
-    board_spi,
-    command=board_epd_dc,
-    chip_select=board_epd_cs,
-    reset=board_epd_reset,
-    baudrate=1000000,
-)
-time.sleep(1)
-display = adafruit_ssd1680.SSD1680(
-    display_bus,
-    width=display_width,
-    height=display_height,
-    rotation=270,
-    busy_pin=board_epd_busy,
-)
-display_data = displayio.Group()
-display_background = displayio.Bitmap(display_width, display_height, 1)
-display_color_palette = displayio.Palette(1)
-display_color_palette[0] = display_white
-
-# Append tilegrid with the background to the display data
-display_data.append(
-    displayio.TileGrid(display_background, pixel_shader=display_color_palette)
-)
-
-# Render namecard to display
-_addText("Jmeno", 3, display_black, 70, 20)
-_addText("Prijmeni", 3, display_black, 50, 60)
-_addText("Firma/Projekt", 2, display_black, 45, 100)
-display.show(display_data)
-display.refresh()
-
-# MAIN LOOP
-while True:
-    if touch_1.value:
-        # Turn off the LED
-        led_matrix.fill(led_off)
-        led_matrix.show()
-    if touch_2.value:
-        # Set LED to red
-        led_matrix.fill(led_red)
-        led_matrix.show()
-    if touch_3.value:
-        # Set LED to green
-        led_matrix.fill(led_green)
-        led_matrix.show()
-    if touch_4.value:
-        # Set LED to blue
-        led_matrix.fill(led_blue)
-        led_matrix.show()
-    if touch_5.value:
-        # Turn off the LED
-        led_matrix.fill(led_off)
-        led_matrix.show()
+asyncio.run(main())
