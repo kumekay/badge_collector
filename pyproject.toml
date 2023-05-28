@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 100
+target-version = ['py311']
+extend-exclude = 'lib'
+
+[tool.ruff]
+line-length = 100
+target-version = 'py311'
+exclude = ['lib']
