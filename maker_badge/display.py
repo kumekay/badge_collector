@@ -57,8 +57,6 @@ def display_data():
     display_color_palette[0] = COLORS["white"]
 
     # Append tilegrid with the background to the display data
-    data.append(
-        displayio.TileGrid(display_background, pixel_shader=display_color_palette)
-    )
+    data.append(displayio.TileGrid(display_background, pixel_shader=display_color_palette))
 
     return data
