@@ -12,18 +12,27 @@ current_peers = {}
 all_peers = []  # type: list[str]
 
 # Question to be sent
-# Format: (question, (answers), correct_answer_index, secret_char, secret_char_position)
+# Format: (
+#   question,
+#   (answers), # At most 5 answers
+#   correct_answer_index,
+#   secret_char,
+#   secret_char_position,
+#   word_length
+# )
 QUESTION = (
     "The first ESP chip is ...",
     (
         "ESP32",
         "ESP8266",
+        "ESP2413",
         "ESP32-C3",
-        "ESP32-S2",
+        "ESP16",
     ),
     1,
     "E",
     2,
+    7,
 )
 QUESTION_BYTES = json.dumps(QUESTION).encode("utf-8")
 
