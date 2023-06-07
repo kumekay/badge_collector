@@ -1,13 +1,15 @@
 import asyncio
+import binascii
 import json
 
 import espnow
 
-# BROADCAST_PEER = espnow.Peer(b"\xff" * 6)
-
 # Dictionary of known peers
 # Keys are MAC addresses, values - number of packets sent
-known_peers = {}
+current_peers = {}
+
+# List of all peers ever seen
+all_peers = []  # type: list[str]
 
 # Question to be sent
 # Format: (question, (answers), correct_answer_index, secret_char, secret_char_position)
@@ -33,10 +35,11 @@ async def listener(enow):
             print("Packet", packet.mac, packet.msg, packet.rssi)
 
             # If we don't know this peer, add it to the dictionary
-            if packet.msg == b"makers!" and packet.mac not in known_peers:
+            if packet.msg == b"makers!" and packet.mac not in current_peers:
                 print("New peer found:", packet.mac)
                 enow.peers.append(espnow.Peer(packet.mac))
-                known_peers[packet.mac] = 0
+                save_peers(packet.mac)
+                current_peers[packet.mac] = 0
 
         await asyncio.sleep(0)
 
@@ -45,18 +48,31 @@ async def sender(enow):
     while True:
         # Send question to all known peers 5 times, then remove them from the list
         for peer in enow.peers:
-            if known_peers[peer.mac] < 5:
+            if current_peers[peer.mac] < 5:
                 print("Sending question")
                 enow.send(QUESTION_BYTES, peer)
-                known_peers[peer.mac] += 1
+                current_peers[peer.mac] += 1
             else:
                 enow.peers.remove(peer)
-                del known_peers[peer.mac]
+                del current_peers[peer.mac]
 
         await asyncio.sleep(2)
 
 
+def save_peers(mac):
+    global all_peers
+
+    if mac not in all_peers:
+        all_peers.append(binascii.hexlify(mac))
+        with open("/peers.json", "w") as f:
+            json.dump(all_peers, f)
+
+
 async def main():
+    global all_peers
+    with open("/peers.json", "r") as f:
+        all_peers = json.load(f)
+
     # Init espnow with broadcast
     enow = espnow.ESPNow()
 
