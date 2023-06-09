@@ -1,67 +1,55 @@
 import asyncio
 
+import beacon
 import button
-import display
-import espnow
 import led
+import sleep
+from display import init as display_init
+from screens import display_badge_screen
 
-BROADCAST_PEER = espnow.Peer(b"\xff" * 6)
+LANGUAGUE = "cz"
+NAME = "Robert Paulson"
+COMPANY = 'Project "Mayhem"'
 
-# Global flag to send beacon
+SLEEP_TIMEOUT = 15
+
+
+# Global variables to handle the state
 sending_beacon = False
+since_last_interaction = 0  # Time since last interaction
 
 
 async def main():
     # Init peripherals
-    buttons = button.init()
-    screen = display.init()
+    beacon.init()
+    button.init()
+    display = display_init()
     leds = led.init()
 
-    # Init espnow with broadcast
-    enow = espnow.ESPNow()
-    enow.peers.append(BROADCAST_PEER)
+    print("Running...")
+    asyncio.create_task(led.blink(leds, "alive"))
 
-    screen_data = display.display_data()
-    display.addText(screen_data, "Press the button", 1, display.COLORS["black"], 0, 20)
-    screen.show(screen_data)
-    screen.refresh()
+    asyncio.create_task(display_badge_screen(display, NAME, COMPANY, lang=LANGUAGUE, awake=True))
 
     tasks = [
-        asyncio.create_task(blink(leds)),
-        asyncio.create_task(button_handler(buttons[0], leds)),
-        asyncio.create_task(send_beacon(enow)),
-        asyncio.create_task(listener(enow, screen)),
+        asyncio.create_task(sleep_handler(leds, display)),
     ]
-    print("Running...")
     await asyncio.gather(*tasks)
 
 
-async def blink(leds):
-    while True:
-        print(".", end="")
-        leds[-1] = led.COLORS["off"]
-        leds.show()
+async def sleep_handler(leds, display):
+    global since_last_interaction
+
+    while since_last_interaction < SLEEP_TIMEOUT:
+        print(since_last_interaction)
         await asyncio.sleep(1)
-        leds[-1] = led.COLORS["red"]
-        leds.show()
-        await asyncio.sleep(1)
+        since_last_interaction += 1
+        if since_last_interaction > SLEEP_TIMEOUT - 5:
+            asyncio.create_task(led.blink(leds))
 
-
-async def listener(enow, screen):
-    while True:
-        if enow:
-            packet = enow.read()
-            print("Packet", packet.mac, packet.msg, packet.rssi)
-
-            screen_data = display.display_data()
-            display.addText(
-                screen_data, packet.msg.decode("utf-8"), 2, display.COLORS["black"], 0, 40
-            )
-            screen.show(screen_data)
-            await asyncio.sleep(screen.time_to_refresh)
-            screen.refresh()
-
-        await asyncio.sleep(0)
+    # Go to sleep after inactivity
+    await display_badge_screen(display, NAME, COMPANY, lang=LANGUAGUE, awake=False)
+    sleep.sleep()
 
 
 async def button_handler(btn, leds):
@@ -77,15 +65,6 @@ async def button_handler(btn, leds):
             sending_beacon = False
 
         await asyncio.sleep(0.05)
-
-
-async def send_beacon(enow):
-    """Send beacon every 0.5 seconds, if button is pressed"""
-    while True:
-        if sending_beacon:
-            enow.send(b"makers!", BROADCAST_PEER)
-
-        await asyncio.sleep(0.5)
 
 
 asyncio.run(main())
