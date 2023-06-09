@@ -92,7 +92,7 @@ def rect_with_text(display_data, text, x, y, width, height, scale=1):
     display_data.append(text_group)
 
 
-def draw_key(display_data, known_letters, key_len, lang):
+def draw_key(display_data, known_letters, lang, key_len=0):
     """Draws a key with known letters"""
     key_width = 20
     key_height = 20
@@ -110,7 +110,7 @@ def draw_key(display_data, known_letters, key_len, lang):
     for i in range(key_len):
         rect_with_text(
             display_data,
-            known_letters.get(i, ""),
+            known_letters.get(str(i), ""),
             i * key_width + key_label_width + 2,
             0,
             key_width,
