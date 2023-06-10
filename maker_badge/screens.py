@@ -20,6 +20,27 @@ def save_letters():
         json.dump(g.letters, f)
 
 
+# def load_letters():
+#     # Example json:
+#     # {"letters": {0: "m", 3: "a"}, "key_len": 4}
+
+#     init = nvm[0]
+#     if init != 32:
+#         nvm[0:2] = b"\x20\x00"
+
+#     letters_len = nvm[1]
+#     if letters_len == 0:
+#         g.letters = {"letters": {0: "m", 3: "a"}, "key_len": 4}
+#     else:
+#         g.letters = json.loads(nvm[2 : letters_len + 2].decode())
+
+
+# def save_letters():
+#     letters = json.dumps(g.letters).encode()
+#     nvm[1] = len(letters)
+#     nvm[2 : nvm[0] + 2] = json.dumps(letters)
+
+
 def show_letters(display_data, lang):
     draw_key(
         display_data,

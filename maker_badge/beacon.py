@@ -29,6 +29,7 @@ def send_beacon(lang="cz"):
 async def right_answer(btn, word_length, secret_char, char_position):
     while True:
         if btn.value:
+            print("Right answer")
             asyncio.create_task(led.blink("green", 1, 0.2))
 
             screens.load_letters()
@@ -43,6 +44,7 @@ async def right_answer(btn, word_length, secret_char, char_position):
 async def wrong_answer(btn):
     while True:
         if btn.value:
+            print("Wrong answer")
             asyncio.create_task(led.blink("red", 1, 0.1))
             await sleep.sleep()
         await asyncio.sleep(0.05)
