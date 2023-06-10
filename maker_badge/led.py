@@ -2,6 +2,7 @@ import asyncio
 
 import board
 import neopixel
+from state import g
 
 COLORS = {
     "off": (0, 0, 0),
@@ -22,12 +23,12 @@ def init(led_pin=board.D18, led_count=4, led_brightness=0.1, led_auto_write=Fals
 
 
 async def blink(
-    leds,
     color="red",
     duration=3,
     interval=0.5,
 ):
     """Blink the LEDs in the given color for the given duration"""
+    leds = g.leds
 
     while duration > 0:
         leds.fill(COLORS[color.lower()])

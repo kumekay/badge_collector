@@ -7,10 +7,10 @@ import button
 import led
 import sleep
 from display import init as display_init
-from screens import display_badge_screen
+from screens import display_badge_screen, load_letters
+from state import g
 
 gc.collect()
-print(gc.mem_free())
 
 LANGUAGUE = "cz"
 NAME = "Robert Paulson"
@@ -25,26 +25,29 @@ since_last_interaction = 0  # Time since last interaction
 
 async def main():
     # Init peripherals
-    enow = beacon.init()
-    buttons = button.init()
-    display = display_init()
-    leds = led.init()
+    g.enow = beacon.init()
+    g.buttons = button.init()
+    g.display = display_init()
+    g.leds = led.init()
+    load_letters()
+    g.lang = LANGUAGUE
+    g.name = NAME
+    g.company = COMPANY
 
-    print("Running...")
-    asyncio.create_task(led.blink(leds, "alive"))
+    asyncio.create_task(led.blink("alive"))
 
-    asyncio.create_task(display_badge_screen(display, NAME, COMPANY, lang=LANGUAGUE, awake=True))
+    asyncio.create_task(display_badge_screen(NAME, COMPANY, lang=LANGUAGUE, awake=True))
 
     tasks = [
-        asyncio.create_task(sleep_handler(leds, display, buttons)),
-        asyncio.create_task(beaconing(buttons[-1], leds, enow, LANGUAGUE)),
-        asyncio.create_task(beacon.listener(enow, display, buttons, LANGUAGUE, leds)),
-        asyncio.create_task(button_refresh(buttons)),
+        asyncio.create_task(sleep_handler()),
+        asyncio.create_task(beaconing(g.buttons[-1], LANGUAGUE)),
+        asyncio.create_task(beacon.listener(LANGUAGUE)),
+        asyncio.create_task(button_refresh()),
     ]
     await asyncio.gather(*tasks)
 
 
-async def sleep_handler(leds, display, btns):
+async def sleep_handler():
     global since_last_interaction
 
     while since_last_interaction < SLEEP_TIMEOUT:
@@ -53,28 +56,27 @@ async def sleep_handler(leds, display, btns):
         await asyncio.sleep(1)
         since_last_interaction += 1
         if since_last_interaction > SLEEP_TIMEOUT - 5:
-            asyncio.create_task(led.blink(leds))
+            asyncio.create_task(led.blink())
 
     # Go to sleep after inactivity
-    await display_badge_screen(display, NAME, COMPANY, lang=LANGUAGUE, awake=False)
-    sleep.sleep(btns)
+    await sleep.sleep()
 
 
-async def beaconing(btn, leds, enow, lang):
+async def beaconing(btn, lang):
     while True:
         if not btn.value:
-            asyncio.create_task(led.blink(leds, "blue", 0.5, 0.125))
-            beacon.send_beacon(enow, lang=lang)
+            asyncio.create_task(led.blink("blue", 0.5, 0.125))
+            beacon.send_beacon(lang=lang)
         await asyncio.sleep(0.5)
 
 
-async def button_refresh(btns):
+async def button_refresh():
     global since_last_interaction
     while True:
-        for btn in btns[:-1]:
+        for btn in g.buttons[:-1]:
             if btn.value:
                 since_last_interaction = 0
-        if not btns[-1].value:
+        if not g.buttons[-1].value:
             since_last_interaction = 0
         await asyncio.sleep(0.1)
 

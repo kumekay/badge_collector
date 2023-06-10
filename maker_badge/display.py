@@ -69,18 +69,19 @@ def centered_text(display_data, text, x, y, width, height, scale=1, wrap=0):
     display_data.append(text_group)
 
 
-def rect_with_text(display_data, text, x, y, width, height, scale=1):
+def rect_with_text(display_data, text, x, y, width, height, scale=1, with_rect=False):
     """Draws a rectangle with centered text"""
 
-    rect = Rect(
-        x,
-        y,
-        width - 1,  # -1 to make space between adjacent rectangles
-        height,
-        fill=WHITE,
-        outline=BLACK,
-    )
-    display_data.append(rect)
+    if with_rect:
+        rect = Rect(
+            x,
+            y,
+            width - 1,  # -1 to make space between adjacent rectangles
+            height,
+            fill=WHITE,
+            outline=BLACK,
+        )
+        display_data.append(rect)
 
     # # Creating centered text
     text_group = displayio.Group(scale=scale)
@@ -94,7 +95,7 @@ def rect_with_text(display_data, text, x, y, width, height, scale=1):
 
 def draw_key(display_data, known_letters, lang, key_len=0):
     """Draws a key with known letters"""
-    key_width = 20
+    key_width = 12
     key_height = 20
 
     key_text = "Klic:" if lang.lower() == "cz" else "Key:"
@@ -110,7 +111,7 @@ def draw_key(display_data, known_letters, lang, key_len=0):
     for i in range(key_len):
         rect_with_text(
             display_data,
-            known_letters.get(str(i), ""),
+            known_letters.get(str(i), "_").upper(),
             i * key_width + key_label_width + 2,
             0,
             key_width,
@@ -144,6 +145,7 @@ def draw_question(display_data, question, answers):
             DISPLAY_HEIGHT - answer_height,
             answer_width,
             answer_height,
+            with_rect=True,
         )
 
 
