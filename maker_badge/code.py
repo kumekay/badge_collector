@@ -12,7 +12,7 @@ from state import g
 
 gc.collect()
 
-LANGUAGUE = "cz"
+LANGUAGUE = "cz"  # "cz" or "en"
 NAME = "Robert Paulson"
 COMPANY = 'Project "Mayhem"'
 

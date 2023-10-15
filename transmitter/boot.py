@@ -1,8 +1,16 @@
+import supervisor
+
 import board
 import digitalio
 import storage
 
-switch = digitalio.DigitalInOut(board.BUTTONS)
+
+# Workaround for
+# https://github.com/adafruit/circuitpython/issues/8449
+supervisor.runtime.autoreload = False
+
+
+switch = digitalio.DigitalInOut(board.IO47)
 switch.direction = digitalio.Direction.INPUT
 switch.pull = digitalio.Pull.UP
 

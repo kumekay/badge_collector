@@ -1,7 +1,7 @@
 import asyncio
 import binascii
 import json
-
+import gc
 import espnow
 
 # Dictionary of known peers
@@ -112,9 +112,17 @@ async def main():
 
     listener_task = asyncio.create_task(listener(enow))
     sender_task = asyncio.create_task(sender(enow))
+    memory_state = asyncio.create_task(state_monitor())
 
     print("Running...")
-    await asyncio.gather(listener_task, sender_task)
+    await asyncio.gather(listener_task, sender_task, memory_state)
+
+
+async def state_monitor():
+    print(gc.mem_free())
+    gc.collect()
+
+    await asyncio.sleep(1)
 
 
 asyncio.run(main())
