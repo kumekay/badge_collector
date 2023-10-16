@@ -38,6 +38,7 @@ async def right_answer(btn, word_length, secret_char, char_position):
             screens.save_letters()
 
             await sleep.sleep()
+
         await asyncio.sleep(0.05)
 
 
@@ -47,6 +48,7 @@ async def wrong_answer(btn):
             print("Wrong answer")
             asyncio.create_task(led.blink("red", 1, 0.1))
             await sleep.sleep()
+
         await asyncio.sleep(0.05)
 
 
@@ -55,12 +57,14 @@ async def listener(lang):
     while True:
         if enow:
             packet = enow.read()
-            print("Packet", packet.mac, packet.msg, packet.rssi)
 
-            if g.current_peer:
+            if not g.current_peer:
+                g.current_peer = packet.mac
+            else:
+                await asyncio.sleep(0.5)
                 continue
 
-            g.current_peer = packet.mac
+            print("Packet", packet.mac, packet.msg, packet.rssi)
 
             question = json.loads(packet.msg.decode("utf-8"))
             # Format: (

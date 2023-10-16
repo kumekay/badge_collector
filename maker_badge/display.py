@@ -8,6 +8,7 @@ import terminalio
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_text import wrap_text_to_lines
 from adafruit_display_text.label import Label
+import gc
 
 BLACK = 0x000000
 WHITE = 0xFFFFFF
@@ -16,6 +17,8 @@ COLORS = {"black": BLACK, "white": WHITE}
 # Define ePaper display resolution
 DISPLAY_WIDTH = 250
 DISPLAY_HEIGHT = 122
+
+DISPLAY_BACKGROUND = displayio.Bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT, 1)
 
 
 def addText(display_data, text, scale, color, x_cord, y_cord):
@@ -147,6 +150,7 @@ def draw_question(display_data, question, answers):
             answer_height,
             with_rect=True,
         )
+    gc.collect()
 
 
 def draw_badge(display_data, name, company, awake, lang):
@@ -182,17 +186,19 @@ def draw_badge(display_data, name, company, awake, lang):
         DISPLAY_WIDTH,
         12,
     )
+    gc.collect()
 
 
 def build_display_data():
+    gc.collect()
     data = displayio.Group()
-    display_background = displayio.Bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT, 1)
     display_color_palette = displayio.Palette(1)
     display_color_palette[0] = COLORS["white"]
 
     # Append tilegrid with the background to the display data
-    data.append(displayio.TileGrid(display_background, pixel_shader=display_color_palette))
+    data.append(displayio.TileGrid(DISPLAY_BACKGROUND, pixel_shader=display_color_palette))
 
+    gc.collect()
     return data
 
 
