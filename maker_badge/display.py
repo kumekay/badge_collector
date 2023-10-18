@@ -8,6 +8,7 @@ import terminalio
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_text import wrap_text_to_lines
 from adafruit_display_text.label import Label
+from digitalio import DigitalInOut, Direction
 import gc
 
 BLACK = 0x000000
@@ -35,6 +36,9 @@ def init():
     board_epd_dc = board.D40
     board_epd_reset = board.D39
     board_epd_busy = board.D42
+    enable_display = DigitalInOut(board.D16)
+    enable_display.direction = Direction.OUTPUT
+    enable_display.value = False
 
     # Prepare ePaper display
     displayio.release_displays()
