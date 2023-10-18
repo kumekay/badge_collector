@@ -42,6 +42,11 @@ async def right_answer(btn, word_length, secret_char, char_position):
         await asyncio.sleep(0.05)
 
 
+def known_letter(char_position):
+    screens.load_letters()
+    return str(char_position) in g.letters["letters"].keys()
+
+
 async def wrong_answer(btn):
     while True:
         if btn.value:
@@ -75,6 +80,12 @@ async def listener(lang):
             #   4: secret_char_position,
             #   5: word_length
             # )
+
+            # Don't show the question if it was already answered
+            if known_letter(question[4]):
+                print('The known "{}" letter was already answered'.format(question[3]))
+                continue
+
             screens.display_question_screen(question, lang)
 
             correct_answer = question[2]
